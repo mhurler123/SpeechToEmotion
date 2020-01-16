@@ -9,6 +9,7 @@ import dataset
 from torch.utils.data import DataLoader
 
 # SETTINGS
+DATASET_PATH = os.path.expanduser("./data/")
 EMB_CACHE = os.path.expanduser("./")
 DATASET_CACHE = os.path.expanduser("./")
 MODEL_CHECKPOINTS = os.path.abspath('./')
@@ -47,7 +48,7 @@ def evaluate(dataloader, net):
 
 def train(load=False, load_chkpt=None):
     # set up data
-    wholeset, trainset, valset = dataset.loadData('train.json', 0.2)
+    wholeset, trainset, valset = dataset.loadData(DATASET_PATH+'train.json', 0.2)
     dataloaderTrain = DataLoader(trainset, batch_size=BATCH_SIZE, shuffle=True,
                                  num_workers=0, collate_fn=dataset.collateRNN)
     dataloaderVal   = DataLoader(valset, batch_size=len(valset.indices),
