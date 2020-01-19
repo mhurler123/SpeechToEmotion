@@ -35,57 +35,11 @@ def onehot(valence, activation):
               (1,1): [0,0,0,1]}
     return lookup[(valence, activation)]
 
-def loadData(filename, valPerc=0):
+def loadAndSplitData(filename, valPerc=0):
+    """
+    Loads dataset and splits it into training and validation.
+    """
     data = LogMelDataset(filename)
     splitIndex = int(len(data)*(1-valPerc))
     trainSet, valSet = torch.utils.data.random_split(data,[splitIndex,len(data)-splitIndex])
     return data, trainSet, valSet
-
-def testBatchingRNN(filename):
-    # test batching
-    trainset = LogMelDataset(filename)
-
-    dataloader = DataLoader(trainset, batch_size=10, shuffle=False,
-                            num_workers=4, collate_fn=collateRNN)
-    for numBatch, batch in enumerate(dataloader):
-        inputs = batch['features']
-        labels = batch['label']
-        print(numBatch, len(inputs), len(labels))
-        if (numBatch == 0):
-            print(inputs)
-
-def testBatchingCNN(filename):
-    # test batching
-    trainset = LogMelDataset(filename)
-
-    dataloader = DataLoader(trainset, batch_size=10, shuffle=False,
-                            num_workers=4, collate_fn=collateCNN)
-    for numBatch, batch in enumerate(dataloader):
-        inputs = batch['features']
-        labels = batch['label']
-        print(numBatch, inputs.size(), labels.size())
-        if (numBatch == 0):
-            print(inputs)
-
-def printDataset(filename):
-    trainset = LogMelDataset(filename)
-
-    for i in range(len(trainset)):
-        sample = trainset[i]
-        print(i, sample['features'].size(), len(sample['label']))
-
-def printMaxSeqLen(filename):
-    trainset = LogMelDataset(filename)
-
-    maxSeqLen = 0
-    for i in range(len(trainset)):
-        sample = trainset[i]
-        seqLen = sample['features'].size()[0]
-        if  seqLen > maxSeqLen:
-            maxSeqLen = seqLen
-    print ("Longest sequence: ", maxSeqLen)
-
-#testBatchingRNN('train.json')
-#testBatchingCNN('train.json')
-#printDataset('train.json')
-#printMaxSeqLen('train.json')
