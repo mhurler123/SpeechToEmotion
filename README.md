@@ -1,3 +1,3 @@
 # SpeechToEmotion
-
-This project contains a pytorch implementation of an LSTM-based model for emotion classification from logMel input features. 
+ 
+This project contains a pytorch implementation for emotion classification from logMel input features.
