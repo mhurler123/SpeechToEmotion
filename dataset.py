@@ -2,7 +2,6 @@ import json
 import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
-import torch.nn.functional as F
 
 
 class LogMelDataset(Dataset):
@@ -41,39 +40,6 @@ def loadData(filename, valPerc=0):
     splitIndex = int(len(data)*(1-valPerc))
     trainSet, valSet = torch.utils.data.random_split(data,[splitIndex,len(data)-splitIndex])
     return data, trainSet, valSet
-
-def collateRNN(batchSequence):
-    batchFeatures = []
-    batchLabels   = []
-
-    for sample in batchSequence:
-        batchFeatures.append(sample['features'])
-        batchLabels.append(sample['label'])
-
-    return {'features': torch.nn.utils.rnn.pack_sequence(batchFeatures,
-                        enforce_sorted=False),
-            'label': torch.LongTensor(batchLabels)}
-
-def collateCNN(batchSequence):
-    batchFeatures = []
-    batchLabels   = []
-
-    maxSeqLen = 0
-    for sample in batchSequence:
-        seqLen = sample['features'].size()[0]
-        if seqLen > maxSeqLen:
-            maxSeqLen = seqLen
-    maxSeqLen=2000
-
-    for sample in batchSequence:
-        feature = torch.FloatTensor(sample['features'])
-        pad = (0, 0, 0, maxSeqLen - feature.shape[0])
-        pdZeroFeature = [F.pad(feature, pad, 'constant', 0).tolist()]
-        batchFeatures.append(pdZeroFeature)
-        batchLabels.append(sample['label'])
-
-    return {'features': torch.FloatTensor(batchFeatures),
-            'label': torch.LongTensor(batchLabels)}
 
 def testBatchingRNN(filename):
     # test batching

@@ -10,7 +10,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 import numpy as np
 
-class CNNClassifier(nn.Module):
+class Classifier(nn.Module):
     """docstring for LSTMClassifier"""
     def __init__(self):
         super(CNNClassifier, self).__init__()
@@ -53,3 +53,32 @@ class CNNClassifier(nn.Module):
         print(out.shape)
         out = self.fc(out)
         return out
+
+
+def collate(batchSequence):
+    """
+    Since the data can contain sequences of different size, the default batching
+    of torch.utils.data.DataLoader can not be used.
+    This tells the DataLoader how a sequence of raw data must be batched in
+    order to work with the classifier.
+
+        batchSequence   List of data to be batched
+
+        returns         Dict with features which are zero padded to match the
+                        maximum sequence length and labels converted to
+                        torch.LongTensor
+    """
+    batchFeatures = []
+    batchLabels   = []
+
+    maxSeqLen=2000
+
+    for sample in batchSequence:
+        feature = torch.FloatTensor(sample['features'])
+        pad = (0, 0, 0, maxSeqLen - feature.shape[0])
+        pdZeroFeature = [F.pad(feature, pad, 'constant', 0).tolist()]
+        batchFeatures.append(pdZeroFeature)
+        batchLabels.append(sample['label'])
+
+    return {'features': torch.FloatTensor(batchFeatures),
+            'label': torch.LongTensor(batchLabels)}
