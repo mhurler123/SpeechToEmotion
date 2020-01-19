@@ -1,9 +1,8 @@
-import os
-import re
 import torch
 import torch.nn as nn
+from model.modelBase import ModelBase
 
-class Classifier(nn.Module):
+class Classifier(ModelBase):
 
     def __init__(self, inputSize, outputSize, hiddenSize, numLayers=1,
                  dropout=0.):

@@ -3,17 +3,15 @@
 #%autoreload 2
 #%matplotlib inline
 #%%
-import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.optim as optim
-import numpy as np
+from model.modelBase import ModelBase
 
-class Classifier(nn.Module):
+class Classifier(ModelBase):
     """docstring for LSTMClassifier"""
     def __init__(self):
-        super(CNNClassifier, self).__init__()
+        super().__init__()
         num_classes = 4
 
         self.layer1 = nn.Sequential(
@@ -71,6 +69,11 @@ def collate(batchSequence):
     batchFeatures = []
     batchLabels   = []
 
+    maxSeqLen = 0
+    for sample in batchSequence:
+        seqLen = sample['features'].size()[0]
+        if seqLen > maxSeqLen:
+            maxSeqLen = seqLen
     maxSeqLen=2000
 
     for sample in batchSequence:
