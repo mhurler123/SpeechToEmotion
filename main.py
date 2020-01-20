@@ -142,7 +142,6 @@ def train(load=False, load_chkpt=None):
 
 def predict(filename, load_chkpt=None):
     print("Predicting... ", end="")
-    output = {}
     testset = dataset.LogMelDataset(filename)
     dataloader = DataLoader(testset, batch_size=BATCH_SIZE, shuffle=False,
                             num_workers=NUM_WORKERS, collate_fn=collate)
@@ -163,13 +162,14 @@ def predict(filename, load_chkpt=None):
     except FileNotFoundError:
         print("Could not find weights for model, starting from scratch.")
 
+    # predict
+    output = {}
     totalCount = 0
     for batchIdx, batch in enumerate(dataloader):
         # extract input
         inputs, labels = batch['features'], batch['label']
         inputs = inputs.cuda() if DEVICE==torch.device('cuda') else inputs.cpu()
 
-        # predict only
         predictions = model(inputs).to(DEVICE)
 
         for prediction in predictions:
