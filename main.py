@@ -5,21 +5,22 @@ import torch
 import dataset
 from torch.utils.data import DataLoader
 from enum import Enum
+import json
 
 class ModelType(Enum):
     LSTM = 0
     CNN  = 1
 
 # SETTINGS
-MODEL_TYPE = ModelType.CNN
+MODEL_TYPE = ModelType.LSTM
 DATA_DIR = os.path.expanduser("./data/")
 EMB_CACHE = os.path.expanduser("./")
 DATASET_CACHE = os.path.expanduser("./")
 MODEL_CHECKPOINTS = os.path.abspath('./')
 BATCH_SIZE = 20
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-DEVICE = torch.device('cpu')
-NUM_EPOCHS = 100
+#DEVICE = torch.device('cpu')
+NUM_EPOCHS = 1
 HIDDEN_SIZE = 8 # the LSTM's hidden/output size
 NUM_WORKERS = 8
 LEARNING_RATE = 0.001
@@ -59,12 +60,12 @@ def evaluate(dataloader, net):
 
 def train(load=False, load_chkpt=None):
     # set up data
-    wholeset, trainset, valset = dataset.loadAndSplitData(DATA_DIR+'train.json',
+    trainset, valset, wholeset = dataset.loadAndSplitData(DATA_DIR+'train.json',
                                                           0.2)
     dataloaderTrain = DataLoader(trainset, batch_size=BATCH_SIZE, shuffle=True,
-                                 num_workers=0, collate_fn=collate)
+                                 num_workers=NUM_WORKERS, collate_fn=collate)
     dataloaderVal   = DataLoader(valset, batch_size=len(valset.indices),
-                                 shuffle=True, num_workers=0,
+                                 shuffle=True, num_workers=NUM_WORKERS,
                                  collate_fn=collate)
     featureSize  = wholeset.numFeaturesPerFrame()
     labelSize    = wholeset.labelSize()
@@ -139,12 +140,51 @@ def train(load=False, load_chkpt=None):
         # save model
         model.save(MODEL_CHECKPOINTS, epoch, loss, optimizer)
 
-def predict(filename, load=False, load_chkpt=None, num_samples=1, interactive=False):
-    testData = dataset.LogMelDataset(filename)
+def predict(filename, load_chkpt=None):
+    print("Predicting... ", end="")
+    output = {}
+    testset = dataset.LogMelDataset(filename)
+    dataloader = DataLoader(testset, batch_size=BATCH_SIZE, shuffle=False,
+                            num_workers=NUM_WORKERS, collate_fn=collate)
+    featureSize  = testset.numFeaturesPerFrame()
+    labelSize    = testset.labelSize()
+
+    # set up model
+    model = None
+    if MODEL_TYPE == ModelType.LSTM:
+        model = Classifier(inputSize=featureSize, outputSize=labelSize,
+                           hiddenSize=HIDDEN_SIZE).to(DEVICE)
+    elif MODEL_TYPE == ModelType.CNN:
+        model = Classifier().to(DEVICE)
+
+    # load model from checkpoint
+    try:
+        model.load(MODEL_CHECKPOINTS, load_chkpt)
+    except FileNotFoundError:
+        print("Could not find weights for model, starting from scratch.")
+
+    totalCount = 0
+    for batchIdx, batch in enumerate(dataloader):
+        # extract input
+        inputs, labels = batch['features'], batch['label']
+        inputs = inputs.cuda() if DEVICE==torch.device('cuda') else inputs.cpu()
+
+        # predict only
+        predictions = model(inputs).to(DEVICE)
+
+        for prediction in predictions:
+            classId = torch.argmax(prediction)
+            valence, activation = dataset.onehotRev(classId)
+            output[str(totalCount)] = {"valence": valence,
+                                       "activation": activation}
+            totalCount += 1
+    # write prediction to file
+    with open('prediction.json', 'w') as fp:
+        json.dump(output, fp)
 
 def test():
     return True
 
 if __name__ == "__main__":
     train(load=True)
-    #predict(load=True, num_samples=10, interactive=True)
+    predict('data/dev.json')
