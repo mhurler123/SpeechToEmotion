@@ -21,7 +21,6 @@ BATCH_SIZE = 20
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 #DEVICE = torch.device('cpu')
 NUM_EPOCHS = 1
-HIDDEN_SIZE = 8 # the LSTM's hidden/output size
 NUM_WORKERS = 8
 LEARNING_RATE = 0.001
 
@@ -69,13 +68,11 @@ def train(load=False, load_chkpt=None):
                                  collate_fn=collate)
     featureSize  = wholeset.numFeaturesPerFrame()
     labelSize    = wholeset.labelSize()
-    #print(f"Feature size per frame: {featureSize}\nLabel size: {labelSize}")
 
     # set up model
     model = None
     if MODEL_TYPE == ModelType.LSTM:
-        model = Classifier(inputSize=featureSize, outputSize=labelSize,
-                           hiddenSize=HIDDEN_SIZE).to(DEVICE)
+        model = Classifier(inputSize=featureSize, outputSize=labelSize).to(DEVICE)
     elif MODEL_TYPE == ModelType.CNN:
         model = Classifier().to(DEVICE)
 
@@ -120,9 +117,6 @@ def train(load=False, load_chkpt=None):
             outputs = model(inputs)
             outputs = outputs.to(DEVICE)
 
-            # 2D loss function expects input as (batch, prediction, sequence) and target as (batch, sequence) (containing the class INDEX)
-            # loss = criterion(outputs.permute(0,2,1), labels)
-            # otherwise use view function to get rid of sequence dimension by effectively concatenating all sequence items
             labels = torch.argmax(labels, dim=1)
             loss = criterion(outputs, labels)
 

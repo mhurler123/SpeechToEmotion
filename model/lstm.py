@@ -4,7 +4,7 @@ from model.modelBase import ModelBase
 
 class Classifier(ModelBase):
 
-    def __init__(self, inputSize, outputSize, hiddenSize, numLayers=1,
+    def __init__(self, inputSize, outputSize, hiddenSize=26, numLayers=1,
                  dropout=0.):
         super().__init__()
 
