@@ -69,11 +69,6 @@ def collate(batchSequence):
     batchFeatures = []
     batchLabels   = []
 
-    maxSeqLen = 0
-    for sample in batchSequence:
-        seqLen = sample['features'].size()[0]
-        if seqLen > maxSeqLen:
-            maxSeqLen = seqLen
     maxSeqLen=2000
 
     for sample in batchSequence:
