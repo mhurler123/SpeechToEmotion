@@ -8,11 +8,12 @@ from enum import Enum
 import json
 
 class ModelType(Enum):
-    LSTM = 0
-    CNN  = 1
+    LSTM     = 0
+    CNN      = 1
+    CNN_LSTM = 2
 
 # SETTINGS
-MODEL_TYPE = ModelType.LSTM
+MODEL_TYPE = ModelType.CNN_LSTM
 DATA_DIR = os.path.expanduser("./data/")
 EMB_CACHE = os.path.expanduser("./")
 DATASET_CACHE = os.path.expanduser("./")
@@ -20,7 +21,7 @@ MODEL_CHECKPOINTS = os.path.abspath('./')
 BATCH_SIZE = 20
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 #DEVICE = torch.device('cpu')
-NUM_EPOCHS = 1
+NUM_EPOCHS = 100
 NUM_WORKERS = 8
 LEARNING_RATE = 0.001
 
@@ -30,6 +31,9 @@ if MODEL_TYPE == ModelType.LSTM:
 elif MODEL_TYPE == ModelType.CNN:
     from model.cnn import Classifier
     from model.cnn import collate
+elif MODEL_TYPE == ModelType.CNN_LSTM:
+    from model.cnn_lstm import Classifier
+    from model.cnn_lstm import collate
 
 def evaluate(dataloader, net):
     print("Evaluating... ", end="")
@@ -73,7 +77,7 @@ def train(load=False, load_chkpt=None):
     model = None
     if MODEL_TYPE == ModelType.LSTM:
         model = Classifier(inputSize=featureSize, outputSize=labelSize).to(DEVICE)
-    elif MODEL_TYPE == ModelType.CNN:
+    elif MODEL_TYPE == ModelType.CNN or MODEL_TYPE == ModelType.CNN_LSTM:
         model = Classifier().to(DEVICE)
 
     # set up optimizer
@@ -145,9 +149,8 @@ def predict(filename, load_chkpt=None):
     # set up model
     model = None
     if MODEL_TYPE == ModelType.LSTM:
-        model = Classifier(inputSize=featureSize, outputSize=labelSize,
-                           hiddenSize=HIDDEN_SIZE).to(DEVICE)
-    elif MODEL_TYPE == ModelType.CNN:
+        model = Classifier(inputSize=featureSize, outputSize=labelSize).to(DEVICE)
+    elif MODEL_TYPE == ModelType.CNN or MODEL_TYPE == ModelType.CNN_LSTM:
         model = Classifier().to(DEVICE)
 
     # load model from checkpoint
@@ -181,4 +184,4 @@ def test():
 
 if __name__ == "__main__":
     train(load=True)
-    predict('data/dev.json')
+    #predict('data/dev.json')
