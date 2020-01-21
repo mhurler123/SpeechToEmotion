@@ -184,4 +184,4 @@ def test():
 
 if __name__ == "__main__":
     train(load=True)
-    #predict('data/dev.json')
+    predict('data/dev.json')
