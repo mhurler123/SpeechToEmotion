@@ -70,7 +70,7 @@ class Classifier(ModelBase):
 
     def forward(self, inputs):
         batchSize, numFrames, numChannels, frameSize, numFeatures = inputs.size()
-        cnnIn   = inputs.view(batchSize * timesteps, numChannels, frameSize,
+        cnnIn   = inputs.view(batchSize * numFrames, numChannels, frameSize,
                               numFeatures)
         cnnOut  = self.cnn(cnnIn)
         lstmIn  = cnnOut.view(batchSize, numFrames, -1)
