@@ -6,7 +6,6 @@ import dataset
 from torch.utils.data import DataLoader
 from enum import Enum
 import json
-from torch.utils.tensorboard import SummaryWriter
 
 class ModelType(Enum):
     LSTM     = 0
@@ -19,6 +18,7 @@ DATA_DIR = os.path.expanduser("./data/")
 EMB_CACHE = os.path.expanduser("./")
 DATASET_CACHE = os.path.expanduser("./")
 MODEL_CHECKPOINTS = os.path.abspath('./')
+HAS_TENSORBOARD = False
 BATCH_SIZE = 20
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 #DEVICE = torch.device('cpu')
@@ -37,7 +37,12 @@ elif MODEL_TYPE == ModelType.CNN_LSTM:
     from model.cnn_lstm import collate
 
 # tensorboard support
-writer = SummaryWriter()
+try:
+    from torch.utils.tensorboard import SummaryWriter
+    HAS_TENSORBOARD = True
+    writer = SummaryWriter()
+except ImportError as error:
+    pass
 
 def evaluate(dataloader, net):
     print("Evaluating... ", end="")
@@ -138,13 +143,15 @@ def train(load=False, load_chkpt=None):
             pbar.update(labels.size(0))
             metric_dict.update({'loss': f'{loss.item():6.3f}'})
             pbar.set_postfix(metric_dict)
-            writer.add_scalar('Loss/train', loss.item(),
-                    epoch*len(dataloaderTrain) + numBatch)
+            if HAS_TENSORBOARD:
+                writer.add_scalar('Loss/train', loss.item(),
+                        epoch*len(dataloaderTrain) + numBatch)
 
         accuracy = 100*evaluate(dataloaderVal, model)
         metric_dict.update({'accuracy': f'{accuracy:6.2f}%'})
         pbar.set_postfix(metric_dict)
-        writer.add_scalar('Accuracy/train', accuracy, epoch)
+        if HAS_TENSORBOARD:
+            writer.add_scalar('Accuracy/train', accuracy, epoch)
 
         # save model
         model.save(MODEL_CHECKPOINTS, epoch, loss, optimizer)
