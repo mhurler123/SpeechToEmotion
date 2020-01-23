@@ -47,6 +47,7 @@ def evaluate(dataloader, net):
 
         # predict only
         predictions = net(inputs).to(DEVICE)
+        predictions = predictions.detach()
 
         # compute index of predicted class
         predClassIndices = torch.argmax(predictions, dim=1)
