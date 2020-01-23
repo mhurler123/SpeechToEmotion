@@ -6,6 +6,7 @@ import dataset
 from torch.utils.data import DataLoader
 from enum import Enum
 import json
+from tensorboardX import SummaryWriter
 
 class ModelType(Enum):
     LSTM     = 0
@@ -19,11 +20,11 @@ EMB_CACHE = os.path.expanduser("./")
 DATASET_CACHE = os.path.expanduser("./")
 MODEL_CHECKPOINTS = os.path.abspath('./')
 BATCH_SIZE = 20
-DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 #DEVICE = torch.device('cpu')
 NUM_EPOCHS = 100
 NUM_WORKERS = 8
-LEARNING_RATE = 0.001
+LEARNING_RATE = 0.0001
 
 if MODEL_TYPE == ModelType.LSTM:
     from model.lstm import Classifier
@@ -39,15 +40,16 @@ def evaluate(dataloader, net):
     print("Evaluating... ", end="")
     correctCount = 0
     totalCount = 0
-    for batchIdx, batch in enumerate(dataloader):
+
+    for numBatch, batch in enumerate(dataloader):
         # extract input and labels
         inputs, labels = batch['features'], batch['label']
-        inputs = inputs.cuda() if DEVICE==torch.device('cuda') else inputs.cpu()
+        inputs = inputs.cuda() if DEVICE=='cuda' else inputs.cpu()
         labels = labels.to(DEVICE)
 
-        # predict only
-        predictions = net(inputs).to(DEVICE)
-        predictions = predictions.detach()
+        # forward + backward + optimize
+        with torch.no_grad():
+            predictions = net(inputs)
 
         # compute index of predicted class
         predClassIndices = torch.argmax(predictions, dim=1)
@@ -55,11 +57,12 @@ def evaluate(dataloader, net):
         # compute index of label class
         labelClassIndices = torch.argmax(labels, dim=1)
 
+        correct = predClassIndices == labelClassIndices
+        correctCount += correct.sum(0)
+
         # compute amount of correct predictions
         batchSize = len(labels)
         totalCount += batchSize
-        for b in range(batchSize):
-            correctCount += int(predClassIndices[b] == labelClassIndices[b])
     return float(correctCount)/float(totalCount)
 
 def train(load=False, load_chkpt=None):
@@ -68,7 +71,7 @@ def train(load=False, load_chkpt=None):
                                                           0.2)
     dataloaderTrain = DataLoader(trainset, batch_size=BATCH_SIZE, shuffle=True,
                                  num_workers=NUM_WORKERS, collate_fn=collate)
-    dataloaderVal   = DataLoader(valset, batch_size=len(valset.indices),
+    dataloaderVal   = DataLoader(valset, batch_size=BATCH_SIZE,#len(valset.indices),
                                  shuffle=True, num_workers=NUM_WORKERS,
                                  collate_fn=collate)
     featureSize  = wholeset.numFeaturesPerFrame()
@@ -82,9 +85,10 @@ def train(load=False, load_chkpt=None):
         model = Classifier().to(DEVICE)
 
     # set up optimizer
-    criterion = torch.nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=LEARNING_RATE,
-                                momentum=0.9)
+    criterion = torch.nn.CrossEntropyLoss().to(DEVICE)
+    #optimizer = torch.optim.SGD(model.parameters(), lr=LEARNING_RATE,
+    #                            momentum=0.9)
+    optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
     metric_dict = {'loss': '------', 'accuracy': '------'}
     start_epoch = 0
@@ -112,7 +116,7 @@ def train(load=False, load_chkpt=None):
         for numBatch, batch in enumerate(dataloaderTrain):
             # extract input and labels
             inputs, labels = batch['features'], batch['label']
-            inputs = inputs.cuda() if DEVICE==torch.device('cuda') else inputs.cpu()
+            inputs = inputs.cuda() if DEVICE=='cuda' else inputs.cpu()
             labels = labels.to(DEVICE)
 
             # zero the parameter gradients
@@ -120,7 +124,6 @@ def train(load=False, load_chkpt=None):
 
             # forward + backward + optimize
             outputs = model(inputs)
-            outputs = outputs.to(DEVICE)
 
             labels = torch.argmax(labels, dim=1)
             loss = criterion(outputs, labels)
@@ -166,7 +169,7 @@ def predict(filename, load_chkpt=None):
     for batchIdx, batch in enumerate(dataloader):
         # extract input
         inputs, labels = batch['features'], batch['label']
-        inputs = inputs.cuda() if DEVICE==torch.device('cuda') else inputs.cpu()
+        inputs = inputs.cuda() if DEVICE=='cuda' else inputs.cpu()
 
         predictions = model(inputs).to(DEVICE)
 
