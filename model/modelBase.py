@@ -32,7 +32,7 @@ class ModelBase(nn.Module):
 
         torch.save(chkpt, file)
 
-    def load(self, path, load_chkpt):
+    def load(self, path, load_chkpt, mapLocation="cpu"):
         regex = re.compile(r'^chkpt_(\d*).pt$')
         chkpt = None
         for file in os.listdir(path):
@@ -42,7 +42,7 @@ class ModelBase(nn.Module):
                     chkpt = result.group(1)
 
         file = os.path.join(path, f"chkpt_{chkpt}.pt")
-        checkpoint = torch.load(file)
+        checkpoint = torch.load(file, map_location=mapLocation)
 
         self.load_state_dict(checkpoint['model_state_dict'])
         return checkpoint['epoch'],\
