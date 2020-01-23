@@ -6,7 +6,7 @@ import dataset
 from torch.utils.data import DataLoader
 from enum import Enum
 import json
-from tensorboardX import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 
 class ModelType(Enum):
     LSTM     = 0
@@ -35,6 +35,9 @@ elif MODEL_TYPE == ModelType.CNN:
 elif MODEL_TYPE == ModelType.CNN_LSTM:
     from model.cnn_lstm import Classifier
     from model.cnn_lstm import collate
+
+# tensorboard support
+writer = SummaryWriter()
 
 def evaluate(dataloader, net):
     print("Evaluating... ", end="")
@@ -135,10 +138,14 @@ def train(load=False, load_chkpt=None):
             pbar.update(labels.size(0))
             metric_dict.update({'loss': f'{loss.item():6.3f}'})
             pbar.set_postfix(metric_dict)
+            writer.add_scalar('Loss/train', loss.item(),
+                    epoch*len(dataloaderTrain) + numBatch)
 
-        #TODO later for dev: evaluate on training set after each epoch
-        metric_dict.update({'accuracy': f'{100*evaluate(dataloaderVal, model):6.2f}%'})
+        accuracy = 100*evaluate(dataloaderVal, model)
+        metric_dict.update({'accuracy': f'{accuracy:6.2f}%'})
         pbar.set_postfix(metric_dict)
+        writer.add_scalar('Accuracy/train', accuracy, epoch)
+
         # save model
         model.save(MODEL_CHECKPOINTS, epoch, loss, optimizer)
 
