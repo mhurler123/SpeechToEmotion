@@ -14,17 +14,16 @@ CNN3_CHANNELS = 64
 CNN1_MAX_POOL_KERNEL = (2,1)
 CNN2_MAX_POOL_KERNEL = (2,1)
 CNN3_MAX_POOL_KERNEL = (2,2)
-LINEAR_IN = getLinearLayerInputSize()
 
 def getLinearLayerInputSize():
     scaleFrame = CNN1_MAX_POOL_KERNEL[0]*CNN2_MAX_POOL_KERNEL[0]*\
             CNN3_MAX_POOL_KERNEL[0]
     scaleFeature = CNN1_MAX_POOL_KERNEL[1]*CNN2_MAX_POOL_KERNEL[1]*\
             CNN3_MAX_POOL_KERNEL[1]
-    return CNN3_CHANNELS * int(FRAME_SIZE/scaleFrame) \
+    return CNN3_CHANNELS * int(FRAME_SIZE/scaleFrame)\
             * int(FEATURE_SIZE/scaleFeature)
 
-
+LINEAR_IN = getLinearLayerInputSize()
 
 class Classifier(ModelBase):
     """
