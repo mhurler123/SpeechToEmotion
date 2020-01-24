@@ -75,7 +75,7 @@ class Classifier(ModelBase):
         cnnOut  = self.cnn(cnnIn)
         lstmIn  = cnnOut.view(batchSize, numFrames, -1)
         outputs, (hn, cn) = self.lstm(lstmIn) # by default (h0, c0) are zero
-        outputs = hn[0] # we will only use the last hidden state
+        outputs = outputs[:, -1, :]
         return outputs
 
 
