@@ -24,7 +24,7 @@ DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 #DEVICE = torch.device('cpu')
 NUM_EPOCHS = 100
 NUM_WORKERS = 0 if os.name == 'nt' else 8
-LEARNING_RATE = 0.0001
+LEARNING_RATE = 0.001
 
 if MODEL_TYPE == ModelType.LSTM:
     from model.lstm import Classifier
