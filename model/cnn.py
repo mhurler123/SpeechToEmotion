@@ -8,6 +8,24 @@ import torch.nn as nn
 import torch.nn.functional as F
 from model.modelBase import ModelBase
 
+FEATURE_SIZE = 26
+CNN1_CHANNELS = 128
+CNN2_CHANNELS = 64
+CNN3_CHANNELS = 64
+CNN1_MAX_POOL_KERNEL = (2,2)
+CNN2_MAX_POOL_KERNEL = (2,2)
+CNN3_MAX_POOL_KERNEL = (2,2)
+
+def getLinearLayerInputSize():
+    scaleFrame = CNN1_MAX_POOL_KERNEL[0]*CNN2_MAX_POOL_KERNEL[0]*\
+            CNN3_MAX_POOL_KERNEL[0]
+    scaleFeature = CNN1_MAX_POOL_KERNEL[1]*CNN2_MAX_POOL_KERNEL[1]*\
+            CNN3_MAX_POOL_KERNEL[1]
+    return CNN3_CHANNELS * int(FRAME_SIZE/scaleFrame)\
+            * int(FEATURE_SIZE/scaleFeature)
+
+LINEAR_IN = getLinearLayerInputSize()
+
 class Classifier(ModelBase):
     """docstring for LSTMClassifier"""
     def __init__(self):
@@ -15,33 +33,39 @@ class Classifier(ModelBase):
         num_classes = 4
 
         self.layer1 = nn.Sequential(
-                nn.Conv2d(in_channels=1, out_channels=128 , kernel_size=(3,3),stride=(1,1), padding_mode='same'),
-                nn.BatchNorm2d(128),
+                nn.Conv2d(in_channels=1, out_channels=CNN1_CHANNELS ,
+                        kernel_size=(3,3),stride=(1,1), padding = 1,
+                        padding_mode='same'),
+                nn.BatchNorm2d(CNN1_CHANNELS),
                 nn.ReLU(),
-                nn.MaxPool2d(kernel_size=2, stride=(2,2)),
+                nn.MaxPool2d(kernel_size=CNN1_MAX_POOL_KERNEL, stride=(2,2)),
                 nn.Dropout2d(0.5)
                 )
 
         self.layer2 = nn.Sequential(
-                nn.Conv2d(in_channels=128, out_channels=64, kernel_size=(3,3),stride=(1,1), padding_mode='same'),
-                nn.BatchNorm2d(64),
+                nn.Conv2d(in_channels=CNN1_CHANNELS, out_channels=CNN2_CHANNELS,
+                        kernel_size=(3,3),stride=(1,1), padding = 1,
+                        padding_mode='same'),
+                nn.BatchNorm2d(CNN2_CHANNELS),
                 nn.ReLU(),
-                nn.MaxPool2d(kernel_size=2, stride=2),
+                nn.MaxPool2d(kernel_size=CNN2_MAX_POOL_KERNEL, stride=(2, 2)),
                 nn.Dropout2d(0.25)
                 )
 
         self.layer3 = nn.Sequential(
-                nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(3,3),stride=(1,1), padding_mode='same'),
-                nn.BatchNorm2d(64),
+                nn.Conv2d(in_channels=CNN2_CHANNELS, out_channels=CNN3_CHANNELS,
+                        kernel_size=(3,3),stride=(1,1), padding = 1,
+                        padding_mode='same'),
+                nn.BatchNorm2d(CNN3_CHANNELS),
                 nn.ReLU(),
-                nn.MaxPool2d(kernel_size=2, stride=2),
+                nn.MaxPool2d(kernel_size=CNN3_MAX_POOL_KERNEL, stride=(2, 2)),
                 nn.Dropout2d(0.25)
                 )
 
         # conv2d with kernel 3 and out 13 will crop to 12x12
         # max pool 12/4= 3
         # therefore 3*3*13
-        self.fc = nn.Linear(15872,num_classes)
+        self.fc = nn.Linear(LINEAR_IN, num_classes)
 
     def forward(self, input_seq):
         out = self.layer1(input_seq)
@@ -69,7 +93,7 @@ def collate(batchSequence):
     batchFeatures = []
     batchLabels   = []
 
-    maxSeqLen=2000
+    maxSeqLen=1000
 
     for sample in batchSequence:
         feature = torch.FloatTensor(sample['features'])
