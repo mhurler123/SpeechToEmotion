@@ -3,9 +3,27 @@ import torch.nn as nn
 import torch.nn.functional as F
 from model.modelBase import ModelBase
 
+FEATURE_SIZE = 26
 FRAME_SIZE  = 50
 NUM_FRAMES  = 20
 MAX_SEQ_LEN = FRAME_SIZE * NUM_FRAMES
+
+CNN1_CHANNELS = 128
+CNN2_CHANNELS = 64
+CNN3_CHANNELS = 64
+CNN1_MAX_POOL_KERNEL = (2,1)
+CNN2_MAX_POOL_KERNEL = (2,1)
+CNN3_MAX_POOL_KERNEL = (2,2)
+LINEAR_IN = getLinearLayerInputSize()
+
+def getLinearLayerInputSize():
+    scaleFrame = CNN1_MAX_POOL_KERNEL[0]*CNN2_MAX_POOL_KERNEL[0]*\
+            CNN3_MAX_POOL_KERNEL[0]
+    scaleFeature = CNN1_MAX_POOL_KERNEL[1]*CNN2_MAX_POOL_KERNEL[1]*\
+            CNN3_MAX_POOL_KERNEL[1]
+    return CNN3_CHANNELS * int(FRAME_SIZE/scaleFrame) \
+            * int(FEATURE_SIZE/scaleFeature)
+
 
 
 class Classifier(ModelBase):
@@ -24,46 +42,50 @@ class Classifier(ModelBase):
 
         # Start off with a cnn to extract some high-level features from the seen frame
         self.layer1 = nn.Sequential(
-            nn.Conv2d(in_channels=1, out_channels=20, kernel_size=(3,3),stride=(1,1), padding_mode='same'),
-            nn.BatchNorm2d(20),
+            nn.Conv2d(in_channels=1, out_channels=CNN1_CHANNELS,
+                kernel_size=(3,3),stride=(1,1), padding=1, padding_mode='same'),
+            nn.BatchNorm2d(CNN1_CHANNELS),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=(2,2)),
+            nn.MaxPool2d(kernel_size=CNN1_MAX_POOL_KERNEL, stride=(2, 1)),
             nn.Dropout2d(0.5)
         )
 
         self.layer2 = nn.Sequential(
-            nn.Conv2d(in_channels=20, out_channels=10, kernel_size=(3,3),stride=(1,1), padding_mode='same'),
-            nn.BatchNorm2d(10),
+            nn.Conv2d(in_channels=CNN1_CHANNELS, out_channels=CNN2_CHANNELS,
+                kernel_size=(3,3),stride=(1,1), padding=1, padding_mode='same'),
+            nn.BatchNorm2d(CNN2_CHANNELS),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2),
+            nn.MaxPool2d(kernel_size=CNN2_MAX_POOL_KERNEL, stride=(2, 1)),
             nn.Dropout2d(0.25)
         )
 
         self.layer3 = nn.Sequential(
-            nn.Conv2d(in_channels=10, out_channels=10, kernel_size=(3,3), stride=(1,1), padding_mode='same'),
-            nn.BatchNorm2d(10),
+            nn.Conv2d(in_channels=CNN2_CHANNELS, out_channels=CNN3_CHANNELS,
+                kernel_size=(3,3), stride=(1,1), padding=1, padding_mode='same'),
+            nn.BatchNorm2d(CNN3_CHANNELS),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2),
+            nn.MaxPool2d(kernel_size=CNN3_MAX_POOL_KERNEL, stride=2),
             nn.Dropout2d(0.25)
         )
 
         # A linear layer maps the high-level features to an emotion prediction
         self.layer4 = nn.Sequential (
-            nn.Linear(in_features=40, out_features=4),
-            nn.ReLU()
+            nn.Linear(in_features=LINEAR_IN, out_features=26),
+            nn.ReLU(),
+            nn.Dropout(0.25)
         )
 
         # The lstm network turns the emotion predictions for each frame into a
         # prediction for the whole sequence
-        self.lstm = nn.LSTM(input_size=4, hidden_size=4,
+        self.lstm = nn.LSTM(input_size=26, hidden_size=4,
                             num_layers=1, dropout=0)
 
     def cnn(self, inputs):
         outputs = self.layer1(inputs)
         outputs = self.layer2(outputs)
         outputs = self.layer3(outputs)
-        # outputs.shape is (batch_size * timesteps, 10, H, W)
-        # flatten to shape (batch_size * timesteps, 10*H*W)
+        # outputs.shape is (batch_size * timesteps, C, H, W)
+        # flatten to shape (batch_size * timesteps, C*H*W)
         outputs = outputs.view(outputs.size(0), -1) # flatten
         outputs = self.layer4(outputs)
         return outputs
@@ -86,7 +108,7 @@ def collate(batchSequence):
     This tells the DataLoader how a sequence of raw data must be batched in
     order to work with the classifier.
 
-        batchSequence   List of data to be batched
+        batchSequence   List containing the data of a single batch
 
         returns         Dict with features of shape
                         (batchSize, NUM_FRAMES, 1, FRAME_SIZE, 26)
