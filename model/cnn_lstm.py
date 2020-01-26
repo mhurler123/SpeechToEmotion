@@ -3,14 +3,15 @@ import torch.nn as nn
 import torch.nn.functional as F
 from model.modelBase import ModelBase
 
-FEATURE_SIZE = 26
-FRAME_SIZE  = 50
-NUM_FRAMES  = 20
-MAX_SEQ_LEN = FRAME_SIZE * NUM_FRAMES
+FEATURE_SIZE         = 26
+LABEL_SIZE           = 4
+FRAME_SIZE           = 50
+NUM_FRAMES           = 20
+MAX_SEQ_LEN          = FRAME_SIZE * NUM_FRAMES
 
-CNN1_CHANNELS = 128
-CNN2_CHANNELS = 64
-CNN3_CHANNELS = 64
+CNN1_CHANNELS        = 128
+CNN2_CHANNELS        = 64
+CNN3_CHANNELS        = 64
 CNN1_MAX_POOL_KERNEL = (2,1)
 CNN2_MAX_POOL_KERNEL = (2,1)
 CNN3_MAX_POOL_KERNEL = (2,2)
@@ -23,7 +24,7 @@ def getLinearLayerInputSize():
     return CNN3_CHANNELS * int(FRAME_SIZE/scaleFrame)\
             * int(FEATURE_SIZE/scaleFeature)
 
-LINEAR_IN = getLinearLayerInputSize()
+LINEAR_IN            = getLinearLayerInputSize()
 
 class Classifier(ModelBase):
     """
@@ -117,17 +118,34 @@ def collate(batchSequence):
     batchLabels   = []
 
     for sample in batchSequence:
-        # pad all sequences to the same length
+        # reflection pad all sequences to the same length
         feature = torch.FloatTensor(sample['features'])
-        pad = (0, 0, 0, MAX_SEQ_LEN - feature.shape[0])
-        pdZeroFeature = F.pad(feature, pad, 'constant', 0).tolist()
+        seqLen = feature.shape[0]
+        feature = feature.reshape(1, 1, feature.shape[0], feature.shape[1])
+        padLen = MAX_SEQ_LEN - seqLen
+
+        # workaround if mutliple reflections are necessary
+        repetitions = padLen / seqLen
+        if repetitions >= 1.:
+            for i in range(int(repetitions)):
+                reflectionPad = nn.ReflectionPad2d((0, 0, 0, seqLen-1))
+                feature = reflectionPad(feature)
+                reflectionPad = nn.ReflectionPad2d((0, 0, 0, 1))
+                feature = reflectionPad(feature)
+            reflectionPad = nn.ReflectionPad2d((0, 0, 0, padLen%seqLen))
+            feature = reflectionPad(feature)
+        else:
+            pad = (0, 0, 0, padLen)
+            reflectionPad = nn.ReflectionPad2d(pad)
+            feature = reflectionPad(feature)
+        feature = feature[0][0].tolist()
 
         # subdivide the temporal sequence into frames
         frames = []
         for frameId in range(NUM_FRAMES):
             start = frameId * FRAME_SIZE
             end   = start + FRAME_SIZE
-            frame = pdZeroFeature[start:end]
+            frame = feature[start:end]
             # add additional dimension for channel (needed for cnn)
             frames.append([frame])
 
