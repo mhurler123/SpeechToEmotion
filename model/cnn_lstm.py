@@ -73,7 +73,7 @@ class Classifier(ModelBase):
         # A linear layer maps the high-level features to an emotion prediction
         self.layer4 = nn.Sequential (
             nn.Linear(in_features=LINEAR_IN, out_features=26),
-            nn.ReLU(),
+            nn.Sigmoid(),
             nn.Dropout(0.25)
         )
 
