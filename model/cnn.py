@@ -86,8 +86,8 @@ def collate(batchSequence):
 
         batchSequence   List of data to be batched
 
-        returns         Dict with features which are zero padded to match the
-                        maximum sequence length and labels converted to
+        returns         Dict with features that are reflection padded to match
+                        the maximum sequence length and labels converted to
                         torch.LongTensor
     """
     batchFeatures = []
@@ -97,8 +97,25 @@ def collate(batchSequence):
 
     for sample in batchSequence:
         feature = torch.FloatTensor(sample['features'])
-        pad = (0, 0, 0, maxSeqLen - feature.shape[0])
-        pdZeroFeature = [F.pad(feature, pad, 'constant', 0).tolist()]
+        feature = feature.reshape(1, 1, feature.shape[0], feature.shape[1])
+        padLen = MAX_SEQ_LEN - seqLen
+
+        # workaround if multiple reflections are necessary
+        repetitions = padLen / seqLen
+        if repetitions >= 1.:
+            for i in range(int(repetitions)):
+                reflectionPad = nn.ReflectionPad2d((0, 0, 0, seqLen-1))
+                feature = reflectionPad(feature)
+                reflectionPad = nn.ReflectionPad2d((0, 0, 0, 1))
+                feature = reflectionPad(feature)
+            reflectionPad = nn.ReflectionPad2d((0, 0, 0, padLen%seqLen))
+            feature = reflectionPad(feature)
+        else:
+            pad = (0, 0, 0, padLen)
+            reflectionPad = nn.ReflectionPad2d(pad)
+            feature = reflectionPad(feature)
+        feature = feature[0][0].tolist()
+
         batchFeatures.append(pdZeroFeature)
         batchLabels.append(sample['label'])
 
