@@ -47,7 +47,7 @@ class Classifier(ModelBase):
             nn.Conv2d(in_channels=1, out_channels=CNN1_CHANNELS,
                 kernel_size=(5,5),stride=(1,1), padding=2, padding_mode='same'),
             nn.BatchNorm2d(CNN1_CHANNELS),
-            nn.Sigmoid(),
+            nn.Relu(),
             nn.MaxPool2d(kernel_size=CNN1_MAX_POOL_KERNEL, stride=(2, 1)),
             nn.Dropout2d(0)
         )
@@ -56,7 +56,7 @@ class Classifier(ModelBase):
             nn.Conv2d(in_channels=CNN1_CHANNELS, out_channels=CNN2_CHANNELS,
                 kernel_size=(3,3),stride=(1,1), padding=1, padding_mode='same'),
             nn.BatchNorm2d(CNN2_CHANNELS),
-            nn.Sigmoid(),
+            nn.Relu(),
             nn.MaxPool2d(kernel_size=CNN2_MAX_POOL_KERNEL, stride=(2, 1)),
             nn.Dropout2d(0)
         )
@@ -65,7 +65,7 @@ class Classifier(ModelBase):
             nn.Conv2d(in_channels=CNN2_CHANNELS, out_channels=CNN3_CHANNELS,
                 kernel_size=(3,3), stride=(1,1), padding=1, padding_mode='same'),
             nn.BatchNorm2d(CNN3_CHANNELS),
-            nn.Sigmoid(),
+            nn.Relu(),
             nn.MaxPool2d(kernel_size=CNN3_MAX_POOL_KERNEL, stride=2),
             nn.Dropout2d(0)
         )
@@ -73,7 +73,7 @@ class Classifier(ModelBase):
         # A linear layer maps the high-level features to an emotion prediction
         self.layer4 = nn.Sequential (
             nn.Linear(in_features=LINEAR_IN, out_features=26),
-            nn.Sigmoid(),
+            nn.Relu(),
             nn.Dropout(0.25)
         )
 
@@ -111,13 +111,14 @@ def collate(batchSequence):
     Since the data can contain sequences of different size, the default batching
     of torch.utils.data.DataLoader can not be used.
     This tells the DataLoader how a sequence of raw data must be batched in
-    order to work with the classifier.
+    order to work with the classifier. Here, each sample sequence is reflection
+    padded and cut into multiple frames.
 
         batchSequence   List containing the data of a single batch
 
         returns         Dict with features of shape
-                        (batchSize, NUM_FRAMES, 1, FRAME_SIZE, 26)
-                        and labels converted to torch.LongTensor
+                        (batchSize, NUM_FRAMES, 1, FRAME_SIZE, 26) and labels
+                        converted to torch.FloatTensor.
     """
     batchFeatures = []
     batchLabels   = []
