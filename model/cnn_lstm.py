@@ -47,7 +47,7 @@ class Classifier(ModelBase):
             nn.Conv2d(in_channels=1, out_channels=CNN1_CHANNELS,
                 kernel_size=(5,5),stride=(1,1), padding=2, padding_mode='same'),
             nn.BatchNorm2d(CNN1_CHANNELS),
-            nn.Relu(),
+            nn.ReLU(),
             nn.MaxPool2d(kernel_size=CNN1_MAX_POOL_KERNEL, stride=(2, 1)),
             nn.Dropout2d(0)
         )
@@ -56,7 +56,7 @@ class Classifier(ModelBase):
             nn.Conv2d(in_channels=CNN1_CHANNELS, out_channels=CNN2_CHANNELS,
                 kernel_size=(3,3),stride=(1,1), padding=1, padding_mode='same'),
             nn.BatchNorm2d(CNN2_CHANNELS),
-            nn.Relu(),
+            nn.ReLU(),
             nn.MaxPool2d(kernel_size=CNN2_MAX_POOL_KERNEL, stride=(2, 1)),
             nn.Dropout2d(0)
         )
@@ -65,7 +65,7 @@ class Classifier(ModelBase):
             nn.Conv2d(in_channels=CNN2_CHANNELS, out_channels=CNN3_CHANNELS,
                 kernel_size=(3,3), stride=(1,1), padding=1, padding_mode='same'),
             nn.BatchNorm2d(CNN3_CHANNELS),
-            nn.Relu(),
+            nn.ReLU(),
             nn.MaxPool2d(kernel_size=CNN3_MAX_POOL_KERNEL, stride=2),
             nn.Dropout2d(0)
         )
@@ -73,7 +73,7 @@ class Classifier(ModelBase):
         # A linear layer maps the high-level features to an emotion prediction
         self.layer4 = nn.Sequential (
             nn.Linear(in_features=LINEAR_IN, out_features=26),
-            nn.Relu(),
+            nn.ReLU(),
             nn.Dropout(0.25)
         )
 
@@ -82,7 +82,12 @@ class Classifier(ModelBase):
         self.lstm = nn.LSTM(input_size=26, hidden_size=LSTM_HIDDEN,
                             num_layers=1, dropout=0)
 
-        self.fc = nn.Linear(in_features=LSTM_HIDDEN, out_features=LABEL_SIZE)
+        self.layer4 = nn.Sequential (
+            self.fc = nn.Linear(in_features=LSTM_HIDDEN,
+                out_features=LABEL_SIZE),
+            nn.ReLU(),
+            nn.Dropout2d(0)
+        )
 
     def cnn(self, inputs):
         outputs = self.layer1(inputs)
