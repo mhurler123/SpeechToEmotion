@@ -82,9 +82,8 @@ class Classifier(ModelBase):
         self.lstm = nn.LSTM(input_size=26, hidden_size=LSTM_HIDDEN,
                             num_layers=1, dropout=0)
 
-        self.layer4 = nn.Sequential (
-            self.fc = nn.Linear(in_features=LSTM_HIDDEN,
-                out_features=LABEL_SIZE),
+        self.fc = nn.Sequential (
+            nn.Linear(in_features=LSTM_HIDDEN, out_features=LABEL_SIZE),
             nn.ReLU(),
             nn.Dropout2d(0)
         )
