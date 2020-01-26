@@ -4,17 +4,16 @@ from model.modelBase import ModelBase
 
 FEATURE_SIZE = 26
 LABEL_SIZE   = 4
-HIDDEN_SIZE  = 26
+HIDDEN_SIZE  = 30
 
 class Classifier(ModelBase):
 
-    def __init__(self, inputSize, outputSize, hiddenSize=26, numLayers=1,
-                 dropout=0.25):
+    def __init__(self):
         super().__init__()
 
         # The LSTM Network
         self.lstm = nn.LSTM(input_size=FEATURE_SIZE, hidden_size=HIDDEN_SIZE,
-                            num_layers=numLayers, dropout=dropout)
+                            num_layers=1)
 
         # A single linear unit (fully connected layer) will convert
         # the output of the LSTM with size hiddenSize to the desired output size
