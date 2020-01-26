@@ -86,11 +86,7 @@ def train(load=False, load_chkpt=None):
     labelSize    = wholeset.labelSize()
 
     # set up model
-    model = None
-    if MODEL_TYPE == ModelType.LSTM:
-        model = Classifier(inputSize=featureSize, outputSize=labelSize).to(DEVICE)
-    elif MODEL_TYPE == ModelType.CNN or MODEL_TYPE == ModelType.CNN_LSTM:
-        model = Classifier().to(DEVICE)
+    model = Classifier().to(DEVICE)
 
     # set up optimizer
     criterion = torch.nn.CrossEntropyLoss().to(DEVICE)
@@ -165,11 +161,7 @@ def predict(filename, load_chkpt=None):
     labelSize    = testset.labelSize()
 
     # set up model
-    model = None
-    if MODEL_TYPE == ModelType.LSTM:
-        model = Classifier(inputSize=featureSize, outputSize=labelSize).to(DEVICE)
-    elif MODEL_TYPE == ModelType.CNN or MODEL_TYPE == ModelType.CNN_LSTM:
-        model = Classifier().to(DEVICE)
+    model = Classifier().to(DEVICE)
 
     # load model from checkpoint
     try:
