@@ -8,10 +8,11 @@ import torch.nn as nn
 import torch.nn.functional as F
 from model.modelBase import ModelBase
 
-FEATURE_SIZE = 26
-CNN1_CHANNELS = 128
-CNN2_CHANNELS = 64
-CNN3_CHANNELS = 64
+FEATURE_SIZE         = 26
+LABEL_SIZE           = 4
+CNN1_CHANNELS        = 128
+CNN2_CHANNELS        = 64
+CNN3_CHANNELS        = 64
 CNN1_MAX_POOL_KERNEL = (2,2)
 CNN2_MAX_POOL_KERNEL = (2,2)
 CNN3_MAX_POOL_KERNEL = (2,2)
@@ -30,7 +31,6 @@ class Classifier(ModelBase):
     """docstring for LSTMClassifier"""
     def __init__(self):
         super().__init__()
-        num_classes = 4
 
         self.layer1 = nn.Sequential(
                 nn.Conv2d(in_channels=1, out_channels=CNN1_CHANNELS ,
@@ -65,7 +65,7 @@ class Classifier(ModelBase):
         # conv2d with kernel 3 and out 13 will crop to 12x12
         # max pool 12/4= 3
         # therefore 3*3*13
-        self.fc = nn.Linear(LINEAR_IN, num_classes)
+        self.fc = nn.Linear(LINEAR_IN, LABEL_SIZE)
 
     def forward(self, input_seq):
         out = self.layer1(input_seq)
