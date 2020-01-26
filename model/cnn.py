@@ -65,14 +65,17 @@ class Classifier(ModelBase):
         # conv2d with kernel 3 and out 13 will crop to 12x12
         # max pool 12/4= 3
         # therefore 3*3*13
-        self.fc = nn.Linear(LINEAR_IN, LABEL_SIZE)
+        self.fc =  nn.Sequential(
+            nn.Linear(LINEAR_IN, LABEL_SIZE),
+            nn.ReLU(),
+            nn.Dropout2d(0.25)
+        )
 
     def forward(self, input_seq):
         out = self.layer1(input_seq)
         out = self.layer2(out)
         out = self.layer3(out)
         out = out.view(out.size(0), -1) # flatten
-        print(out.shape)
         out = self.fc(out)
         return out
 
