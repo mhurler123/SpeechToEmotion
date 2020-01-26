@@ -16,6 +16,8 @@ CNN1_MAX_POOL_KERNEL = (2,1)
 CNN2_MAX_POOL_KERNEL = (2,1)
 CNN3_MAX_POOL_KERNEL = (2,2)
 
+LSTM_HIDDEN          = 26
+
 def getLinearLayerInputSize():
     scaleFrame = CNN1_MAX_POOL_KERNEL[0]*CNN2_MAX_POOL_KERNEL[0]*\
             CNN3_MAX_POOL_KERNEL[0]
@@ -43,29 +45,29 @@ class Classifier(ModelBase):
         # Start off with a cnn to extract some high-level features from the seen frame
         self.layer1 = nn.Sequential(
             nn.Conv2d(in_channels=1, out_channels=CNN1_CHANNELS,
-                kernel_size=(11,11),stride=(1,1), padding=5, padding_mode='same'),
+                kernel_size=(5,5),stride=(1,1), padding=5, padding_mode='same'),
             nn.BatchNorm2d(CNN1_CHANNELS),
-            nn.ReLU(),
+            nn.Sigmoid(),
             nn.MaxPool2d(kernel_size=CNN1_MAX_POOL_KERNEL, stride=(2, 1)),
-            nn.Dropout2d(0.5)
+            nn.Dropout2d(0)
         )
 
         self.layer2 = nn.Sequential(
             nn.Conv2d(in_channels=CNN1_CHANNELS, out_channels=CNN2_CHANNELS,
                 kernel_size=(3,3),stride=(1,1), padding=1, padding_mode='same'),
             nn.BatchNorm2d(CNN2_CHANNELS),
-            nn.ReLU(),
+            nn.Sigmoid(),
             nn.MaxPool2d(kernel_size=CNN2_MAX_POOL_KERNEL, stride=(2, 1)),
-            nn.Dropout2d(0.25)
+            nn.Dropout2d(0)
         )
 
         self.layer3 = nn.Sequential(
             nn.Conv2d(in_channels=CNN2_CHANNELS, out_channels=CNN3_CHANNELS,
                 kernel_size=(3,3), stride=(1,1), padding=1, padding_mode='same'),
             nn.BatchNorm2d(CNN3_CHANNELS),
-            nn.ReLU(),
+            nn.Sigmoid(),
             nn.MaxPool2d(kernel_size=CNN3_MAX_POOL_KERNEL, stride=2),
-            nn.Dropout2d(0.25)
+            nn.Dropout2d(0)
         )
 
         # A linear layer maps the high-level features to an emotion prediction
@@ -77,8 +79,10 @@ class Classifier(ModelBase):
 
         # The lstm network turns the emotion predictions for each frame into a
         # prediction for the whole sequence
-        self.lstm = nn.LSTM(input_size=26, hidden_size=4,
+        self.lstm = nn.LSTM(input_size=26, hidden_size=LSTM_HIDDEN,
                             num_layers=1, dropout=0)
+
+        self.fc = nn.Linear(in_features=LSTM_HIDDEN, out_features=LABEL_SIZE)
 
     def cnn(self, inputs):
         outputs = self.layer1(inputs)
@@ -98,6 +102,7 @@ class Classifier(ModelBase):
         lstmIn  = cnnOut.view(batchSize, numFrames, -1)
         outputs, (hn, cn) = self.lstm(lstmIn) # by default (h0, c0) are zero
         outputs = outputs[:, -1, :]
+        outputs = self.fc(outputs)
         return outputs
 
 
@@ -124,7 +129,7 @@ def collate(batchSequence):
         feature = feature.reshape(1, 1, feature.shape[0], feature.shape[1])
         padLen = MAX_SEQ_LEN - seqLen
 
-        # workaround if mutliple reflections are necessary
+        # workaround if multiple reflections are necessary
         repetitions = padLen / seqLen
         if repetitions >= 1.:
             for i in range(int(repetitions)):
