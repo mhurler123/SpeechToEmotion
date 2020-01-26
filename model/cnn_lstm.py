@@ -45,7 +45,7 @@ class Classifier(ModelBase):
         # Start off with a cnn to extract some high-level features from the seen frame
         self.layer1 = nn.Sequential(
             nn.Conv2d(in_channels=1, out_channels=CNN1_CHANNELS,
-                kernel_size=(5,5),stride=(1,1), padding=5, padding_mode='same'),
+                kernel_size=(5,5),stride=(1,1), padding=2, padding_mode='same'),
             nn.BatchNorm2d(CNN1_CHANNELS),
             nn.Sigmoid(),
             nn.MaxPool2d(kernel_size=CNN1_MAX_POOL_KERNEL, stride=(2, 1)),
