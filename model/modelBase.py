@@ -7,7 +7,7 @@ class ModelBase(nn.Module):
     def __init__(self):
         super(ModelBase, self).__init__()
 
-    def save(self, path, epoch, loss=None, optimizer=None, remove_old=True):
+    def save(self, path, epoch, loss=None, optimizer=None, remove_old=False):
         file = os.path.join(path, f"chkpt_{epoch}.pt")
 
         if remove_old:
@@ -32,7 +32,7 @@ class ModelBase(nn.Module):
 
         torch.save(chkpt, file)
 
-    def load(self, path, load_chkpt, mapLocation="cpu"):
+    def load(self, path, loadChkpt, mapLocation='cpu'):
         regex = re.compile(r'^chkpt_(\d*).pt$')
         chkpt = None
         for file in os.listdir(path):
@@ -42,7 +42,7 @@ class ModelBase(nn.Module):
                     chkpt = result.group(1)
 
         file = os.path.join(path, f"chkpt_{chkpt}.pt")
-        checkpoint = torch.load(file, map_location=mapLocation)
+        checkpoint = torch.load(file, mapLocation=mapLocation)
 
         self.load_state_dict(checkpoint['model_state_dict'])
         return checkpoint['epoch'],\
