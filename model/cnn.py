@@ -67,8 +67,6 @@ class Classifier(ModelBase):
         out = self.layer1(input_seq)
         out = self.layer2(out)
         out = self.layer3(out)
-        print('Expected: ', LINEAR_IN)
-        print('Real: ', out.shape)
         out = out.view(out.size(0), -1) # flatten
         out = self.fc(out)
         return out
