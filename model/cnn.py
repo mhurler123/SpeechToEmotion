@@ -61,7 +61,6 @@ class Classifier(ModelBase):
         self.fc =  nn.Sequential(
             nn.Linear(LINEAR_IN, LABEL_SIZE),
             nn.ReLU(),
-            nn.Dropout2d(0.25)
         )
 
     def forward(self, input_seq):
