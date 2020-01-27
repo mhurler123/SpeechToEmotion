@@ -13,11 +13,11 @@ class ModelType(Enum):
     CNN_LSTM = 2
 
 # SETTINGS
-MODEL_TYPE = ModelType.CNN_LSTM
+MODEL_TYPE = ModelType.LSTM
 DATA_DIR = os.path.expanduser("./data/")
 EMB_CACHE = os.path.expanduser("./")
+MODEL_CHECKPOINTS = os.path.abspath('./checkpoints/')
 DATASET_CACHE = os.path.expanduser("./")
-MODEL_CHECKPOINTS = os.path.abspath('./')
 HAS_TENSORBOARD = False
 BATCH_SIZE = 20
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -29,12 +29,16 @@ LEARNING_RATE = 0.001
 if MODEL_TYPE == ModelType.LSTM:
     from model.lstm import Classifier
     from model.lstm import collate
+    MODEL_CHECKPOINTS += 'LSTM'
 elif MODEL_TYPE == ModelType.CNN:
     from model.cnn import Classifier
     from model.cnn import collate
+    MODEL_CHECKPOINTS += 'CNN'
 elif MODEL_TYPE == ModelType.CNN_LSTM:
     from model.cnn_lstm import Classifier
     from model.cnn_lstm import collate
+    MODEL_CHECKPOINTS += 'CNN_LSTM'
+
 
 # tensorboard support
 try:
