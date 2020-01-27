@@ -42,7 +42,7 @@ class ModelBase(nn.Module):
                     chkpt = result.group(1)
 
         file = os.path.join(path, f"chkpt_{chkpt}.pt")
-        checkpoint = torch.load(file, mapLocation=mapLocation)
+        checkpoint = torch.load(file, map_location=mapLocation)
 
         self.load_state_dict(checkpoint['model_state_dict'])
         return checkpoint['epoch'],\
