@@ -10,6 +10,7 @@ from model.modelBase import ModelBase
 
 FEATURE_SIZE         = 26
 LABEL_SIZE           = 4
+MAX_SEQ_LEN          = 1000
 CNN1_CHANNELS        = 128
 CNN2_CHANNELS        = 64
 CNN3_CHANNELS        = 64
@@ -18,11 +19,11 @@ CNN2_MAX_POOL_KERNEL = (2,2)
 CNN3_MAX_POOL_KERNEL = (2,2)
 
 def getLinearLayerInputSize():
-    scaleFrame = CNN1_MAX_POOL_KERNEL[0]*CNN2_MAX_POOL_KERNEL[0]*\
+    scaleSeq = CNN1_MAX_POOL_KERNEL[0]*CNN2_MAX_POOL_KERNEL[0]*\
             CNN3_MAX_POOL_KERNEL[0]
     scaleFeature = CNN1_MAX_POOL_KERNEL[1]*CNN2_MAX_POOL_KERNEL[1]*\
             CNN3_MAX_POOL_KERNEL[1]
-    return CNN3_CHANNELS * int(FRAME_SIZE/scaleFrame)\
+    return CNN3_CHANNELS * int(MAX_SEQ_LEN/scaleSeq)\
             * int(FEATURE_SIZE/scaleFeature)
 
 LINEAR_IN = getLinearLayerInputSize()
