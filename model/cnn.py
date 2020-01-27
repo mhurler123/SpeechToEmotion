@@ -29,34 +29,34 @@ class Classifier(ModelBase):
         super().__init__()
 
         self.layer1 = nn.Sequential(
-                nn.Conv2d(in_channels=1, out_channels=CNN1_CHANNELS ,
-                        kernel_size=(3,3),stride=(1,1), padding = 1,
-                        padding_mode='same'),
-                nn.BatchNorm2d(CNN1_CHANNELS),
-                nn.ReLU(),
-                nn.MaxPool2d(kernel_size=CNN1_MAX_POOL_KERNEL, stride=(2,2)),
-                nn.Dropout2d(0.5)
-                )
+            nn.Conv2d(in_channels=1, out_channels=CNN1_CHANNELS ,
+                    kernel_size=(3,3),stride=(1,1), padding = 1,
+                    padding_mode='same'),
+            nn.BatchNorm2d(CNN1_CHANNELS),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=CNN1_MAX_POOL_KERNEL, stride=(2,2)),
+            nn.Dropout2d(0.5)
+        )
 
         self.layer2 = nn.Sequential(
-                nn.Conv2d(in_channels=CNN1_CHANNELS, out_channels=CNN2_CHANNELS,
-                        kernel_size=(3,3),stride=(1,1), padding = 1,
-                        padding_mode='same'),
-                nn.BatchNorm2d(CNN2_CHANNELS),
-                nn.ReLU(),
-                nn.MaxPool2d(kernel_size=CNN2_MAX_POOL_KERNEL, stride=(2, 2)),
-                nn.Dropout2d(0.25)
-                )
+            nn.Conv2d(in_channels=CNN1_CHANNELS, out_channels=CNN2_CHANNELS,
+                    kernel_size=(3,3),stride=(1,1), padding = 1,
+                    padding_mode='same'),
+            nn.BatchNorm2d(CNN2_CHANNELS),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=CNN2_MAX_POOL_KERNEL, stride=(2, 2)),
+            nn.Dropout2d(0.25)
+        )
 
         self.layer3 = nn.Sequential(
-                nn.Conv2d(in_channels=CNN2_CHANNELS, out_channels=CNN3_CHANNELS,
-                        kernel_size=(3,3),stride=(1,1), padding = 1,
-                        padding_mode='same'),
-                nn.BatchNorm2d(CNN3_CHANNELS),
-                nn.ReLU(),
-                nn.MaxPool2d(kernel_size=CNN3_MAX_POOL_KERNEL, stride=(2, 2)),
-                nn.Dropout2d(0.25)
-                )
+            nn.Conv2d(in_channels=CNN2_CHANNELS, out_channels=CNN3_CHANNELS,
+                    kernel_size=(3,3),stride=(1,1), padding = 1,
+                    padding_mode='same'),
+            nn.BatchNorm2d(CNN3_CHANNELS),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=CNN3_MAX_POOL_KERNEL, stride=(2, 2)),
+            nn.Dropout2d(0.25)
+        )
 
         self.fc =  nn.Sequential(
             nn.Linear(LINEAR_IN, LABEL_SIZE),
@@ -67,6 +67,8 @@ class Classifier(ModelBase):
         out = self.layer1(input_seq)
         out = self.layer2(out)
         out = self.layer3(out)
+        print('Expected: ', LINEAR_IN)
+        print('Real: ', out.shape)
         out = out.view(out.size(0), -1) # flatten
         out = self.fc(out)
         return out
@@ -114,4 +116,4 @@ def collate(batchSequence):
         batchLabels.append(sample['label'])
 
     return {'features': torch.FloatTensor(batchFeatures),
-            'label': torch.LongTensor(batchLabels)}
+            'label'   : torch.LongTensor(batchLabels)}
