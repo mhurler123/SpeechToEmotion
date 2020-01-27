@@ -121,7 +121,7 @@ def collate(batchSequence):
             feature = reflectionPad(feature)
         feature = feature[0][0].tolist()
 
-        batchFeatures.append(pdZeroFeature)
+        batchFeatures.append(feature)
         batchLabels.append(sample['label'])
 
     return {'features': torch.FloatTensor(batchFeatures),
