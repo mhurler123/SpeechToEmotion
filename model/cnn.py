@@ -34,7 +34,7 @@ class Classifier(ModelBase):
                     padding_mode='same'),
             nn.BatchNorm2d(CNN1_CHANNELS),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=CNN1_MAX_POOL_KERNEL, stride=(2,2)),
+            nn.MaxPool2d(kernel_size=CNN1_MAX_POOL_KERNEL, stride=(2,1)),
             nn.Dropout2d(0.5)
         )
 
@@ -44,7 +44,7 @@ class Classifier(ModelBase):
                     padding_mode='same'),
             nn.BatchNorm2d(CNN2_CHANNELS),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=CNN2_MAX_POOL_KERNEL, stride=(2, 2)),
+            nn.MaxPool2d(kernel_size=CNN2_MAX_POOL_KERNEL, stride=(2, 1)),
             nn.Dropout2d(0.25)
         )
 
