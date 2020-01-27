@@ -1,8 +1,3 @@
-#%%
-#%reload_ext autoreload
-#%autoreload 2
-#%matplotlib inline
-#%%
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -63,9 +58,6 @@ class Classifier(ModelBase):
                 nn.Dropout2d(0.25)
                 )
 
-        # conv2d with kernel 3 and out 13 will crop to 12x12
-        # max pool 12/4= 3
-        # therefore 3*3*13
         self.fc =  nn.Sequential(
             nn.Linear(LINEAR_IN, LABEL_SIZE),
             nn.ReLU(),
@@ -96,8 +88,6 @@ def collate(batchSequence):
     """
     batchFeatures = []
     batchLabels   = []
-
-    maxSeqLen=1000
 
     for sample in batchSequence:
         feature = torch.FloatTensor(sample['features'])
