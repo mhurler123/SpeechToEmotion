@@ -7,6 +7,14 @@ from torch.utils.data import DataLoader
 from enum import Enum
 import json
 
+# tensorboard support
+try:
+    from torch.utils.tensorboard import SummaryWriter
+    HAS_TENSORBOARD = True
+    writer = SummaryWriter()
+except ImportError as error:
+    pass
+
 class ModelType(Enum):
     LSTM     = 0
     CNN      = 1
@@ -40,14 +48,6 @@ elif MODEL_TYPE == ModelType.CNN_LSTM:
     MODEL_CHECKPOINTS += '/CNN_LSTM'
 
 
-# tensorboard support
-try:
-    from torch.utils.tensorboard import SummaryWriter
-    HAS_TENSORBOARD = True
-    writer = SummaryWriter()
-except ImportError as error:
-    pass
-
 def evaluate(dataloader, net):
     print("Evaluating... ", end="")
     correctCount = 0
@@ -59,7 +59,7 @@ def evaluate(dataloader, net):
         inputs = inputs.cuda() if DEVICE=='cuda' else inputs.cpu()
         labels = labels.to(DEVICE)
 
-        # forward + backward + optimize
+        # forward
         with torch.no_grad():
             predictions = net(inputs)
 
@@ -69,10 +69,10 @@ def evaluate(dataloader, net):
         # compute index of label class
         labelClassIndices = torch.argmax(labels, dim=1)
 
+        # compute amount of correct predictions
         correct = predClassIndices == labelClassIndices
         correctCount += correct.sum(0)
 
-        # compute amount of correct predictions
         batchSize = len(labels)
         totalCount += batchSize
     return float(correctCount)/float(totalCount)
@@ -114,7 +114,6 @@ def train(load=False, load_chkpt=None):
 
     # a nice progress bar to make the waiting time much better
     pbar = tqdm(total=NUM_EPOCHS*len(trainset), postfix=metric_dict)
-
 
     # run for NUM_EPOCHS epochs
     for epoch in range(start_epoch, start_epoch + NUM_EPOCHS):
