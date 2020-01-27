@@ -29,15 +29,15 @@ LEARNING_RATE = 0.001
 if MODEL_TYPE == ModelType.LSTM:
     from model.lstm import Classifier
     from model.lstm import collate
-    MODEL_CHECKPOINTS += 'LSTM'
+    MODEL_CHECKPOINTS += '/LSTM'
 elif MODEL_TYPE == ModelType.CNN:
     from model.cnn import Classifier
     from model.cnn import collate
-    MODEL_CHECKPOINTS += 'CNN'
+    MODEL_CHECKPOINTS += '/CNN'
 elif MODEL_TYPE == ModelType.CNN_LSTM:
     from model.cnn_lstm import Classifier
     from model.cnn_lstm import collate
-    MODEL_CHECKPOINTS += 'CNN_LSTM'
+    MODEL_CHECKPOINTS += '/CNN_LSTM'
 
 
 # tensorboard support
