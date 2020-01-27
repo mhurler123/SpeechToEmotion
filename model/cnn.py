@@ -119,7 +119,7 @@ def collate(batchSequence):
             pad = (0, 0, 0, padLen)
             reflectionPad = nn.ReflectionPad2d(pad)
             feature = reflectionPad(feature)
-        feature = feature[0][0].tolist()
+        feature = feature[0].tolist()
 
         batchFeatures.append(feature)
         batchLabels.append(sample['label'])
