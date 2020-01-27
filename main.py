@@ -104,7 +104,8 @@ def train(load=False, load_chkpt=None):
     # load model from checkpoint
     if load:
         try:
-            last_epoch, optimizer_state_dict, loss = model.load(MODEL_CHECKPOINTS, load_chkpt)
+            last_epoch, optimizer_state_dict, loss =
+            model.load(MODEL_CHECKPOINTS, load_chkpt, mapLocation=DEVICE)
             start_epoch = last_epoch + 1
             optimizer.load_state_dict(optimizer_state_dict)
             metric_dict.update(loss=loss, accuracy=f'{100*evaluate(dataloaderVal, model):6.2f}%')
@@ -169,7 +170,7 @@ def predict(filename, load_chkpt=None):
 
     # load model from checkpoint
     try:
-        model.load(MODEL_CHECKPOINTS, load_chkpt)
+        model.load(MODEL_CHECKPOINTS, load_chkpt, mapLocation=DEVICE)
     except FileNotFoundError:
         print("Could not find weights for model, starting from scratch.")
 
