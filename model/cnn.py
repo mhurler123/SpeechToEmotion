@@ -101,6 +101,7 @@ def collate(batchSequence):
 
     for sample in batchSequence:
         feature = torch.FloatTensor(sample['features'])
+        seqLen = feature.shape[0]
         feature = feature.reshape(1, 1, feature.shape[0], feature.shape[1])
         padLen = MAX_SEQ_LEN - seqLen
 
