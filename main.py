@@ -11,6 +11,7 @@ class ModelType(Enum):
     LSTM     = 0
     CNN      = 1
     CNN_LSTM = 2
+    DEEP_CNN = 3
 
 # SETTINGS
 MODEL_TYPE = ModelType.LSTM
@@ -35,6 +36,9 @@ elif MODEL_TYPE == ModelType.CNN:
 elif MODEL_TYPE == ModelType.CNN_LSTM:
     from model.cnn_lstm import Classifier, collate
     MODEL_CHECKPOINTS += '/CNN_LSTM'
+elif MODEL_TYPE == ModelType.DEEP_CNN:
+    from model.deep_cnn import Classifier, collate
+    MODEL_CHECKPOINTS += '/DEEP_CNN'
 
 # tensorboard support
 try:
