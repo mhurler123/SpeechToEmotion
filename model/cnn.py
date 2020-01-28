@@ -5,7 +5,7 @@ from model.modelBase import ModelBase
 
 FEATURE_SIZE         = 26
 LABEL_SIZE           = 4
-MAX_SEQ_LEN          = 1000
+MAX_SEQ_LEN          = 500
 CNN1_CHANNELS        = 128
 CNN2_CHANNELS        = 64
 CNN3_CHANNELS        = 64
@@ -21,7 +21,8 @@ def getLinearLayerInputSize():
     return CNN3_CHANNELS * int(MAX_SEQ_LEN/scaleSeq)\
             * int(FEATURE_SIZE/scaleFeature)
 
-LINEAR_IN = getLinearLayerInputSize()
+LINEAR1_IN = getLinearLayerInputSize()
+LINEAR2_IN = 100
 
 class Classifier(ModelBase):
     """docstring for LSTMClassifier"""
@@ -58,8 +59,15 @@ class Classifier(ModelBase):
             nn.Dropout2d(0.25)
         )
 
-        self.fc =  nn.Sequential(
-            nn.Linear(LINEAR_IN, LABEL_SIZE),
+        self.layer4 =  nn.Sequential(
+            nn.Linear(LINEAR1_IN, LINEAR2_IN),
+            nn.Dropout(0.2)
+            nn.ReLU()
+        )
+
+        self.layer5 =  nn.Sequential(
+            nn.Linear(LINEAR2_IN, LABEL_SIZE),
+            nn.Dropout(0.2)
             nn.ReLU()
         )
 
@@ -68,7 +76,8 @@ class Classifier(ModelBase):
         out = self.layer2(out)
         out = self.layer3(out)
         out = out.view(out.size(0), -1) # flatten
-        out = self.fc(out)
+        out = self.layer4(out)
+        out = self.layer5(out)
         return out
 
 
