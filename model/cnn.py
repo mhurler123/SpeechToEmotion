@@ -61,14 +61,14 @@ class Classifier(ModelBase):
 
         self.layer4 =  nn.Sequential(
             nn.Linear(LINEAR1_IN, LINEAR2_IN),
+            nn.ReLU(),
             nn.Dropout(0.2)
-            nn.ReLU()
         )
 
         self.layer5 =  nn.Sequential(
             nn.Linear(LINEAR2_IN, LABEL_SIZE),
+            nn.ReLU(),
             nn.Dropout(0.2)
-            nn.ReLU()
         )
 
     def forward(self, input_seq):
