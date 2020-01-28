@@ -7,14 +7,6 @@ from torch.utils.data import DataLoader
 from enum import Enum
 import json
 
-# tensorboard support
-try:
-    from torch.utils.tensorboard import SummaryWriter
-    HAS_TENSORBOARD = True
-    writer = SummaryWriter()
-except ImportError as error:
-    pass
-
 class ModelType(Enum):
     LSTM     = 0
     CNN      = 1
@@ -35,17 +27,22 @@ NUM_WORKERS = 0 if os.name == 'nt' else 8
 LEARNING_RATE = 0.001
 
 if MODEL_TYPE == ModelType.LSTM:
-    from model.lstm import Classifier
-    from model.lstm import collate
+    from model.lstm import Classifier, collate
     MODEL_CHECKPOINTS += '/LSTM'
 elif MODEL_TYPE == ModelType.CNN:
-    from model.cnn import Classifier
-    from model.cnn import collate
+    from model.cnn import Classifier, collate
     MODEL_CHECKPOINTS += '/CNN'
 elif MODEL_TYPE == ModelType.CNN_LSTM:
-    from model.cnn_lstm import Classifier
-    from model.cnn_lstm import collate
+    from model.cnn_lstm import Classifier, collate
     MODEL_CHECKPOINTS += '/CNN_LSTM'
+
+# tensorboard support
+try:
+    from torch.utils.tensorboard import SummaryWriter
+    HAS_TENSORBOARD = True
+    writer = SummaryWriter()
+except ImportError as error:
+    pass
 
 
 def evaluate(dataloader, net):
