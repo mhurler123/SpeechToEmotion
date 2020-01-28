@@ -103,11 +103,12 @@ class Classifier(ModelBase):
             nn.ReLU(),
             nn.Dropout(0.2)
         )
-        
+
         self.layer8 = nn.Sequential(
             nn.Linear(LINEAR2_IN, LINEAR3_IN),
             nn.ReLU(),
             nn.Dropout(0.2)
+        )
 
         self.layer9 =  nn.Sequential(
             nn.Linear(LINEAR3_IN, LABEL_SIZE),
