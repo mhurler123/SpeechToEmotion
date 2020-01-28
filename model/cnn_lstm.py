@@ -9,9 +9,9 @@ FRAME_SIZE           = 50
 NUM_FRAMES           = 20
 MAX_SEQ_LEN          = FRAME_SIZE * NUM_FRAMES
 
-CNN1_CHANNELS        = 128
+CNN1_CHANNELS        = 64
 CNN2_CHANNELS        = 64
-CNN3_CHANNELS        = 64
+CNN3_CHANNELS        = 32
 CNN1_MAX_POOL_KERNEL = (2,1)
 CNN2_MAX_POOL_KERNEL = (2,1)
 CNN3_MAX_POOL_KERNEL = (2,2)
@@ -49,7 +49,7 @@ class Classifier(ModelBase):
             nn.BatchNorm2d(CNN1_CHANNELS),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=CNN1_MAX_POOL_KERNEL, stride=(2, 1)),
-            nn.Dropout2d(0)
+            nn.Dropout2d(0.5)
         )
 
         self.layer2 = nn.Sequential(
@@ -58,7 +58,7 @@ class Classifier(ModelBase):
             nn.BatchNorm2d(CNN2_CHANNELS),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=CNN2_MAX_POOL_KERNEL, stride=(2, 1)),
-            nn.Dropout2d(0)
+            nn.Dropout2d(0.25)
         )
 
         self.layer3 = nn.Sequential(
@@ -67,14 +67,14 @@ class Classifier(ModelBase):
             nn.BatchNorm2d(CNN3_CHANNELS),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=CNN3_MAX_POOL_KERNEL, stride=2),
-            nn.Dropout2d(0)
+            nn.Dropout2d(0.25)
         )
 
         # A linear layer maps the high-level features to an emotion prediction
         self.layer4 = nn.Sequential (
             nn.Linear(in_features=LINEAR_IN, out_features=26),
             nn.ReLU(),
-            nn.Dropout(0.25)
+            nn.Dropout(0)
         )
 
         # The lstm network turns the emotion predictions for each frame into a
@@ -85,7 +85,6 @@ class Classifier(ModelBase):
         self.fc = nn.Sequential (
             nn.Linear(in_features=LSTM_HIDDEN, out_features=LABEL_SIZE),
             nn.ReLU(),
-            nn.Dropout2d(0)
         )
 
     def cnn(self, inputs):
