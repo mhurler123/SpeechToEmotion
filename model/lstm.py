@@ -13,7 +13,7 @@ class Classifier(ModelBase):
 
         # The LSTM Network
         self.lstm = nn.LSTM(input_size=FEATURE_SIZE, hidden_size=HIDDEN_SIZE,
-                            num_layers=1)
+                            num_layers=2, dropout=0.8)
 
         # A single linear unit (fully connected layer) will convert
         # the output of the LSTM with size hiddenSize to the desired output size
