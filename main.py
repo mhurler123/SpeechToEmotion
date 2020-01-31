@@ -14,15 +14,15 @@ class ModelType(Enum):
     DEEP_CNN = 3
 
 # SETTINGS
-MODEL_TYPE = ModelType.LSTM
+MODEL_TYPE = ModelType.CNN_LSTM
 DATA_DIR = os.path.expanduser("./data/")
 EMB_CACHE = os.path.expanduser("./")
 MODEL_CHECKPOINTS = os.path.abspath('./checkpoints/')
 DATASET_CACHE = os.path.expanduser("./")
 HAS_TENSORBOARD = False
 BATCH_SIZE = 100
-DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
-#DEVICE = torch.device('cpu')
+#DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
+DEVICE = torch.device('cpu')
 NUM_EPOCHS = 1000
 NUM_WORKERS = 0 if os.name == 'nt' else 8
 LEARNING_RATE = 0.001
@@ -54,6 +54,7 @@ def evaluate(dataloader, net):
     correctCount = 0
     totalCount = 0
 
+    net.eval()
     for numBatch, batch in enumerate(dataloader):
         # extract input and labels
         inputs, labels = batch['features'], batch['label']
@@ -92,6 +93,7 @@ def train(load=False, load_chkpt=None):
 
     # set up model
     model = Classifier().to(DEVICE)
+    model.train()
 
     # set up optimizer
     criterion = torch.nn.CrossEntropyLoss().to(DEVICE)
@@ -99,7 +101,11 @@ def train(load=False, load_chkpt=None):
     #                            momentum=0.9)
     optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
-    metric_dict = {'loss': '------', 'accuracy': '------'}
+    # decrease the learning rate when val acc does not improve after 10 epochs
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'max',
+            patience=10, factor=0.1)
+
+    metric_dict = {'loss': '------', 'accuracyVal': '------', 'accuracyTrain': '------' }
     start_epoch = 0
 
     # load model from checkpoint
@@ -109,7 +115,9 @@ def train(load=False, load_chkpt=None):
                 model.load(MODEL_CHECKPOINTS, load_chkpt, mapLocation=DEVICE)
             start_epoch = last_epoch + 1
             optimizer.load_state_dict(optimizer_state_dict)
-            metric_dict.update(loss=loss, accuracy=f'{100*evaluate(dataloaderVal, model):6.2f}%')
+            metric_dict.update(loss=loss,
+                    accuracyVal=f'{100*evaluate(dataloaderVal, model):6.2f}%',
+                    accuracyTrain=f'{100*evaluate(dataloaderTrain, model):6.2f}%')
         except FileNotFoundError:
             pass
 
@@ -152,8 +160,12 @@ def train(load=False, load_chkpt=None):
         accuracyVal = 100*evaluate(dataloaderVal, model)
         accuracyTrain = 100*evaluate(dataloaderTrain, model)
 
+        # dynamically decrease learning rate if no improvement after 10 epochs
+        scheduler.step(accuracyVal)
+
         # update metrics
-        metric_dict.update({'accuracy': f'{accuracyVal:6.2f}%'})
+        metric_dict.update({'accuracyVal': f'{accuracyVal:6.2f}%'})
+        metric_dict.update({'accuracyTrain': f'{accuracyTrain:6.2f}%'})
         pbar.set_postfix(metric_dict)
         if HAS_TENSORBOARD:
             writer.add_scalar('AccuracyVal/train', accuracyVal, epoch)
@@ -172,6 +184,7 @@ def predict(filename, load_chkpt=None):
 
     # set up model
     model = Classifier().to(DEVICE)
+    model.eval()
 
     # load model from checkpoint
     try:
