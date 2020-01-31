@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from model.modelBase import ModelBase
 
 FEATURE_SIZE         = 26
