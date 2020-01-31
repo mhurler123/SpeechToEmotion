@@ -20,7 +20,7 @@ EMB_CACHE = os.path.expanduser("./")
 MODEL_CHECKPOINTS = os.path.abspath('./checkpoints/')
 DATASET_CACHE = os.path.expanduser("./")
 HAS_TENSORBOARD = False
-BATCH_SIZE = 20
+BATCH_SIZE = 100
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 #DEVICE = torch.device('cpu')
 NUM_EPOCHS = 1000
@@ -148,11 +148,16 @@ def train(load=False, load_chkpt=None):
                 writer.add_scalar('Loss/train', loss.item(),
                         epoch*len(dataloaderTrain) + numBatch)
 
-        accuracy = 100*evaluate(dataloaderVal, model)
-        metric_dict.update({'accuracy': f'{accuracy:6.2f}%'})
+        # evaluate the accuracy on validation + training data
+        accuracyVal = 100*evaluate(dataloaderVal, model)
+        accuracyTrain = 100*evaluate(dataloaderTrain, model)
+
+        # update metrics
+        metric_dict.update({'accuracy': f'{accuracyVal:6.2f}%'})
         pbar.set_postfix(metric_dict)
         if HAS_TENSORBOARD:
-            writer.add_scalar('Accuracy/train', accuracy, epoch)
+            writer.add_scalar('AccuracyVal/train', accuracyVal, epoch)
+            writer.add_scalar('AccuracyTrain/train', accuracyTrain, epoch)
 
         # save model
         model.save(MODEL_CHECKPOINTS, epoch, loss, optimizer)
