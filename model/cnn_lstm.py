@@ -114,8 +114,8 @@ def collate(batchSequence):
     Since the data can contain sequences of different size, the default batching
     of torch.utils.data.DataLoader can not be used.
     This tells the DataLoader how a sequence of raw data must be batched in
-    order to work with the classifier. Here, each sample sequence is reflection
-    padded and cut into multiple frames.
+    order to work with the classifier. Here, each sample sequence is padded by
+    repeating the feature sequence and cut into multiple frames.
 
         batchSequence   List containing the data of a single batch
 
@@ -133,21 +133,10 @@ def collate(batchSequence):
         feature = feature.reshape(1, 1, feature.shape[0], feature.shape[1])
         padLen = MAX_SEQ_LEN - seqLen
 
-        # workaround if multiple reflections are necessary
-        repetitions = padLen / seqLen
-        if repetitions >= 1.:
-            for i in range(int(repetitions)):
-                reflectionPad = nn.ReflectionPad2d((0, 0, 0, seqLen-1))
-                feature = reflectionPad(feature)
-                reflectionPad = nn.ReflectionPad2d((0, 0, 0, 1))
-                feature = reflectionPad(feature)
-            reflectionPad = nn.ReflectionPad2d((0, 0, 0, padLen%seqLen))
-            feature = reflectionPad(feature)
-        else:
-            pad = (0, 0, 0, padLen)
-            reflectionPad = nn.ReflectionPad2d(pad)
-            feature = reflectionPad(feature)
-        feature = feature[0][0].tolist()
+        # perform padding
+        padLen = max(MAX_SEQ_LEN - seqLen, 0)
+        feature = np.pad(feature, ((0, 0), (0, padLen),
+            'wrap').tolist()[::MAX_SEQ_LEN]
 
         # subdivide the temporal sequence into frames
         frames = []

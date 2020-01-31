@@ -90,9 +90,9 @@ def collate(batchSequence):
 
         batchSequence   List of data to be batched
 
-        returns         Dict with features that are reflection padded to match
-                        the maximum sequence length and labels converted to
-                        torch.LongTensor
+        returns         Dict with features that are cropped or padded by
+                        repeating the feature sequence to match desired maximum
+                        sequence length and labels converted to torch.LongTensor
     """
     batchFeatures = []
     batchLabels   = []
@@ -103,21 +103,12 @@ def collate(batchSequence):
         feature = feature.reshape(1, 1, feature.shape[0], feature.shape[1])
         padLen = MAX_SEQ_LEN - seqLen
 
-        # workaround if multiple reflections are necessary
-        repetitions = padLen / seqLen
-        if repetitions >= 1.:
-            for i in range(int(repetitions)):
-                reflectionPad = nn.ReflectionPad2d((0, 0, 0, seqLen-1))
-                feature = reflectionPad(feature)
-                reflectionPad = nn.ReflectionPad2d((0, 0, 0, 1))
-                feature = reflectionPad(feature)
-            reflectionPad = nn.ReflectionPad2d((0, 0, 0, padLen%seqLen))
-            feature = reflectionPad(feature)
-        else:
-            pad = (0, 0, 0, padLen)
-            reflectionPad = nn.ReflectionPad2d(pad)
-            feature = reflectionPad(feature)
-        feature = feature[0].tolist()
+        # perform padding
+        padLen = max(MAX_SEQ_LEN - seqLen, 0)
+        feature = np.pad(feature, ((0, 0), (0, padLen),
+            'wrap').tolist()[::MAX_SEQ_LEN]
+
+        # append cropped or padded data to batch
 
         batchFeatures.append(feature)
         batchLabels.append(sample['label'])
