@@ -153,7 +153,7 @@ def collate(batchSequence):
 
         # perform padding
         padLen = max(MAX_SEQ_LEN - seqLen, 0)
-        feature = np.pad(feature, ((0, 0), (0, padLen),
+        feature = np.pad(feature, ((0, 0), (0, padLen)),
             'wrap').tolist()[::MAX_SEQ_LEN]
 
         # append cropped or padded data to batch
