@@ -127,16 +127,16 @@ def collate(batchSequence):
     batchLabels   = []
 
     for sample in batchSequence:
-        # reflection pad all sequences to the same length
-        feature = torch.FloatTensor(sample['features'])
-        seqLen = feature.shape[0]
-        feature = feature.reshape(1, 1, feature.shape[0], feature.shape[1])
-        padLen = MAX_SEQ_LEN - seqLen
+        feature = sample['features']
+        seqLen = len(feature)
 
         # perform padding
-        padLen = max(MAX_SEQ_LEN - seqLen, 0)
-        feature = np.pad(feature, ((0, 0), (0, padLen)),
-            'wrap').tolist()[::MAX_SEQ_LEN]
+        padLen = MAX_SEQ_LEN - seqLen
+        if padLen > 0:
+            feature = np.pad(feature, ((0, padLen), (0, 0)),
+                'wrap').tolist()
+        else:
+            feature = feature[:MAX_SEQ_LEN:]
 
         # subdivide the temporal sequence into frames
         frames = []

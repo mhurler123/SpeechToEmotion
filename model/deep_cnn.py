@@ -147,13 +147,19 @@ def collate(batchSequence):
     batchLabels   = []
 
     for sample in batchSequence:
-        feature = torch.FloatTensor(sample['features'])
-        seqLen = feature.shape[0]
+        feature = sample['features']
+        seqLen = len(feature)
 
         # perform padding
-        padLen = max(MAX_SEQ_LEN - seqLen, 0)
-        feature = np.pad(feature, ((0, 0), (0, padLen)),
-            'wrap').tolist()[::MAX_SEQ_LEN]
+        padLen = MAX_SEQ_LEN - seqLen
+        if padLen > 0:
+            feature = np.pad(feature, ((0, padLen), (0, 0)),
+                'wrap').tolist()
+        else:
+            feature = feature[:MAX_SEQ_LEN:]
+
+        # add additional dimension for channel
+        feature = [feature]
 
         # append cropped or padded data to batch
         batchFeatures.append(feature)
