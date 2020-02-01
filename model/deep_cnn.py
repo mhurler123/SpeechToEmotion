@@ -147,7 +147,7 @@ def collate(batchSequence):
     batchLabels   = []
 
     for sample in batchSequence:
-        feature = sample['features']
+        feature = sample['features'].tolist()
         seqLen = len(feature)
 
         # perform padding
