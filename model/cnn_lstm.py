@@ -5,18 +5,19 @@ from model.modelBase import ModelBase
 
 FEATURE_SIZE         = 26
 LABEL_SIZE           = 4
-FRAME_SIZE           = 50
-NUM_FRAMES           = 20
+FRAME_SIZE           = 20
+NUM_FRAMES           = 10
 MAX_SEQ_LEN          = FRAME_SIZE * NUM_FRAMES
 
-CNN1_CHANNELS        = 64
-CNN2_CHANNELS        = 64
-CNN3_CHANNELS        = 32
+CNN1_CHANNELS        = 5
+CNN2_CHANNELS        = 5
+CNN3_CHANNELS        = 2
 CNN1_MAX_POOL_KERNEL = (2,1)
-CNN2_MAX_POOL_KERNEL = (2,1)
-CNN3_MAX_POOL_KERNEL = (2,2)
+CNN2_MAX_POOL_KERNEL = (1,1)
+CNN3_MAX_POOL_KERNEL = (1,1)
 
 LSTM_HIDDEN          = 26
+LSTM_LAYERS          = 2
 
 def getLinearLayerInputSize():
     scaleFrame = CNN1_MAX_POOL_KERNEL[0]*CNN2_MAX_POOL_KERNEL[0]*\
@@ -48,7 +49,8 @@ class Classifier(ModelBase):
                 kernel_size=(5,5),stride=(1,1), padding=2, padding_mode='same'),
             nn.BatchNorm2d(CNN1_CHANNELS),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=CNN1_MAX_POOL_KERNEL, stride=(2, 1)),
+            nn.MaxPool2d(kernel_size=CNN1_MAX_POOL_KERNEL,
+                stride=CNN1_MAX_POOL_KERNEL),
             nn.Dropout2d(0.5)
         )
 
@@ -57,7 +59,8 @@ class Classifier(ModelBase):
                 kernel_size=(3,3),stride=(1,1), padding=1, padding_mode='same'),
             nn.BatchNorm2d(CNN2_CHANNELS),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=CNN2_MAX_POOL_KERNEL, stride=(2, 1)),
+            nn.MaxPool2d(kernel_size=CNN2_MAX_POOL_KERNEL,
+                stride=CNN2_MAX_POOL_KERNEL),
             nn.Dropout2d(0.25)
         )
 
@@ -66,21 +69,22 @@ class Classifier(ModelBase):
                 kernel_size=(3,3), stride=(1,1), padding=1, padding_mode='same'),
             nn.BatchNorm2d(CNN3_CHANNELS),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=CNN3_MAX_POOL_KERNEL, stride=2),
+            nn.MaxPool2d(kernel_size=CNN3_MAX_POOL_KERNEL,
+                stride=CNN3_MAX_POOL_KERNEL),
             nn.Dropout2d(0.25)
         )
 
         # A linear layer maps the high-level features to an emotion prediction
         self.layer4 = nn.Sequential (
-            nn.Linear(in_features=LINEAR_IN, out_features=26),
+            nn.Linear(in_features=LINEAR_IN, out_features=LSTM_HIDDEN),
             nn.ReLU(),
             nn.Dropout(0)
         )
 
         # The lstm network turns the emotion predictions for each frame into a
         # prediction for the whole sequence
-        self.lstm = nn.LSTM(input_size=26, hidden_size=LSTM_HIDDEN,
-                            num_layers=1, dropout=0)
+        self.lstm = nn.LSTM(input_size=LSTM_HIDDEN, hidden_size=LSTM_HIDDEN,
+                            num_layers=LSTM_LAYERS, dropout=0)
 
         self.fc = nn.Sequential (
             nn.Linear(in_features=LSTM_HIDDEN, out_features=LABEL_SIZE),
@@ -102,9 +106,11 @@ class Classifier(ModelBase):
         cnnIn   = inputs.view(batchSize * numFrames, numChannels, frameSize,
                               numFeatures)
         cnnOut  = self.cnn(cnnIn)
-        lstmIn  = cnnOut.view(batchSize, numFrames, -1)
+        # lstm requires input of shape (timesteps, batch, linear_out)
+        lstmIn  = cnnOut.view(batchSize, numFrames, -1).transpose(0,1)
         outputs, (hn, cn) = self.lstm(lstmIn) # by default (h0, c0) are zero
-        outputs = outputs[:, -1, :]
+        # only last hidden state of last layer is important to us
+        outputs = hn[-1]
         outputs = self.fc(outputs)
         return outputs
 
