@@ -93,7 +93,6 @@ def train(load=False, load_chkpt=None):
 
     # set up model
     model = Classifier().to(DEVICE)
-    model.train()
 
     # set up optimizer
     criterion = torch.nn.CrossEntropyLoss().to(DEVICE)
@@ -126,6 +125,9 @@ def train(load=False, load_chkpt=None):
 
     # run for NUM_EPOCHS epochs
     for epoch in range(start_epoch, start_epoch + NUM_EPOCHS):
+        # set model in training mode
+        model.train()
+
         # run for every data (in batches) of our iterator
         running_loss = 0.0
 
