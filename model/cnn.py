@@ -5,7 +5,7 @@ from model.modelBase import ModelBase
 
 FEATURE_SIZE         = 26
 LABEL_SIZE           = 4
-MAX_SEQ_LEN          = 500
+MAX_SEQ_LEN          = 300
 CNN1_CHANNELS        = 128
 CNN2_CHANNELS        = 64
 CNN3_CHANNELS        = 64
@@ -67,7 +67,6 @@ class Classifier(ModelBase):
 
         self.layer5 =  nn.Sequential(
             nn.Linear(LINEAR2_IN, LABEL_SIZE),
-            nn.ReLU(),
             nn.Dropout(0.2)
         )
 

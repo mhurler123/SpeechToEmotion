@@ -112,7 +112,6 @@ class Classifier(ModelBase):
 
         self.layer9 =  nn.Sequential(
             nn.Linear(LINEAR3_IN, LABEL_SIZE),
-            nn.ReLU(),
             nn.Dropout(0.2)
         )
 

@@ -87,8 +87,7 @@ class Classifier(ModelBase):
                             num_layers=LSTM_LAYERS, dropout=0)
 
         self.fc = nn.Sequential (
-            nn.Linear(in_features=LSTM_HIDDEN, out_features=LABEL_SIZE),
-            nn.ReLU(),
+            nn.Linear(in_features=LSTM_HIDDEN, out_features=LABEL_SIZE)
         )
 
     def cnn(self, inputs):
